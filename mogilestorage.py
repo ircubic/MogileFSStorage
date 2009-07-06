@@ -79,7 +79,8 @@ class MogileFileWrapper(File):
         self._size = len(data)
 
     def read(self, num_bytes=None):
-        self._read_in()
+        if not self._is_dirty:
+            self._read_in()
         return self.file.getvalue()
     
     def write(self, content):
