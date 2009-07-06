@@ -22,16 +22,13 @@ except ImportError:
 
 class MogileFSStorage(Storage):
     """MogileFS filesystem storage"""
-    def __init__(self, url):
-        self.url = url
-        components = url.path.split('/')
-        self.trackers = components[2].split(',')
-        self.domain = components[3]
-        self.clas = None
-        try:
-            self.clas = components[4]
-        except:
-            pass
+    def __init__(self):
+        for setting in ('MOGILE_TRACKERS', 'MOGILE_DOMAIN'):
+            if not hasattr(settings, setting):
+                raise ImproperlyConfigured('The setting %s must be set to ' +
+                                           'use MogileFSStorage' % setting)
+        self.trackers = settings.MOGILE_TRACKERS.split('/')
+        self.domain = settings.MOGILE_DOMAIN
         self.client = mogilefs.Client(self.domain, self.trackers)
     
     def filesize(self, filename):
@@ -53,10 +50,7 @@ class MogileFSStorage(Storage):
         return filename in self.client
     
     def _save(self, filename, contents):
-        #filename = self.get_available_filename(filename)
-        
-        #contents = StringIO(contents)
-        success = self.client.send_file(filename, contents, self.clas)
+        success = self.client.send_file(filename, contents)
         if not success:
             raise IOException("Unable to save file: %s" % filename)
         return force_unicode(filename)
