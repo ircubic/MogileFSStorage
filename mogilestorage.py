@@ -38,7 +38,7 @@ class MogileFSStorage(Storage):
         raise NotImplemented
     
     def url(self, filename):
-        url = urlparse.urljoin(self.url, filename)
+        raise NotImplemented
     
     def _open(self, filename, mode='rb'):
         return MogileFileWrapper(filename, self, mode)
@@ -66,7 +66,6 @@ class MogileFileWrapper(File):
         self._is_dirty = False
         self._size = None
         self.file = StringIO()
-        self.start_range = 0
     
     @property
     def size(self):
