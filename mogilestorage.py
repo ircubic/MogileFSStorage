@@ -95,23 +95,41 @@ class MogileFileWrapper(File):
             self._storage._save(self._name, self.file)
         self.file.close()
 
+def get_random_string(amount=8):
+    import string
+    import random
+    alphabet = string.letters+string.digits
+    return "".join([random.choice(alphabet)
+                    for i in xrange(amount)])
+                    
+
 def test(trackers, domain):
     settings.MOGILE_TRACKERS = ','.join(trackers)
     settings.MOGILE_DOMAIN = domain
     c = mogilefs.Client(domain=domain, trackers=trackers)
     storage = MogileFSStorage()
+
+    def get_test_name():
+        return 'MFSS' + get_random_string(8)
+
+    test_name = get_test_name()
+    test_data = get_random_string(1024*10)
     
-    test_text = 'This is a test'
-    f = storage.open('test')
-    f.write(test_text)
+    f = storage.open(test_name, 'w')
+    f.write(test_data)
     f.close()
-    assert test_text == c['test']
-    
-    c['test2'] = test_text
-    f = storage.open('test2')
+    assert test_data == c[test_name]
+
+    test_name = get_test_name()
+    test_data = get_random_string(1024*10)
+
+    c[test_name] = test_data
+    f = storage.open(test_name)
     read_text = f.read()
     f.close()
-    assert test_text == read_text
+    assert test_data == read_text
+
+    print "Great success!"
     
 
 if __name__ == '__main__':
