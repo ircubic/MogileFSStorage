@@ -1,1 +1,4 @@
 A FileStorage implementation for using MogileFS with Django
+
+Requires http://www.albany.edu/~ja6447/mogilefs.py present somewhere
+on the python path 
