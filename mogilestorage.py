@@ -94,3 +94,33 @@ class MogileFileWrapper(File):
         if self._is_dirty:
             self._storage._save(self._name, self.file)
         self.file.close()
+
+def test(trackers, domain):
+    settings.MOGILE_TRACKERS = ','.join(trackers)
+    settings.MOGILE_DOMAIN = domain
+    c = mogilefs.Client(domain, trackers)
+    storage = MogileFSStorage()
+    
+    test_text = 'This is a test'
+    f = storage.open('test')
+    f.write(test_text)
+    f.close()
+    assert test_text == c['test']
+    
+    c['test2'] = test_text
+    f = storage.open('test2')
+    read_text = f.read()
+    f.close()
+    assert test_text == read_text
+    
+
+if __name__ == '__main__':
+    import sys
+    if len(sys.argv) < 3:
+        raise Exception("Not enough arguments")
+    trackers = [x.strip() for x  in sys.argv[1].split(',')]
+    domain = sys.argv[2]
+    try:
+        test(trackers, domain)
+    except AssertionError, e:
+        print "Test Failed: %s" % e
