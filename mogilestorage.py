@@ -28,9 +28,9 @@ class MogileFSStorage(Storage):
             if not hasattr(settings, setting):
                 raise ImproperlyConfigured('The setting %s must be set to ' +
                                            'use MogileFSStorage' % setting)
-        self.trackers = settings.MOGILE_TRACKERS.split('/')
+        self.trackers = settings.MOGILE_TRACKERS.split(',')
         self.domain = settings.MOGILE_DOMAIN
-        self.client = mogilefs.Client(self.domain, self.trackers)
+        self.client = mogilefs.Client(domain=self.domain, trackers=self.trackers)
     
     def filesize(self, filename):
         raise NotImplemented
@@ -98,7 +98,7 @@ class MogileFileWrapper(File):
 def test(trackers, domain):
     settings.MOGILE_TRACKERS = ','.join(trackers)
     settings.MOGILE_DOMAIN = domain
-    c = mogilefs.Client(domain, trackers)
+    c = mogilefs.Client(domain=domain, trackers=trackers)
     storage = MogileFSStorage()
     
     test_text = 'This is a test'
