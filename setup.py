@@ -1,9 +1,13 @@
 from setuptools import setup
 
+long_description = open("README.txt").read()
+
 setup(name='mogilefs_storage',
       version='0.1b',
       packages=['mogilefs_storage'],
       description='MogileFS FileStorage for Django',
+      long_description=long_description,
+      license='MIT',
       author='Daniel E. Bruce',
       author_email='ircubic@gmail.com',
       zip_safe=True,
