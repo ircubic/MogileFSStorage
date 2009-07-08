@@ -1,3 +1,3 @@
-from mogilefs_storage import MogileFSStorage
+from storage import MogileFSStorage
 
 __all__ = ['MogileFSStorage']

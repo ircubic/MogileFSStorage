@@ -43,7 +43,7 @@ class MogileFSStorage(Storage):
     
     def _open(self, filename, mode='rb'):
         return MogileFileWrapper(filename, self, mode)
-
+        
     def _read(self, filename):
         return self.client[filename]
                                  
@@ -67,7 +67,11 @@ class MogileFileWrapper(File):
         self._is_dirty = False
         self._size = None
         self.file = StringIO()
-    
+
+    @property
+    def name(self):
+        return self._name
+
     @property
     def size(self):
         if self._size is None:
