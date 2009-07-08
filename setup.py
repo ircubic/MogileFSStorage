@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='mogilefs_storage',
-      version='0.1a',
+      version='0.1b',
       packages=['mogilefs_storage'],
       description='MogileFS FileStorage for Django',
       author='Daniel E. Bruce',
