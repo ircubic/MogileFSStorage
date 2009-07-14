@@ -13,6 +13,12 @@ from django.core.files.storage import Storage
 from django.utils.text import force_unicode
 from django.core.files.storage import Storage
 
+try:
+    from functools import wraps
+except:
+    from django.utils.functional import wraps
+
+
 __all__ = ['MogileFSStorage', 'MogileFileWrapper']
 
 try:
@@ -66,26 +72,34 @@ class MogileFileWrapper(File):
         self._mode = mode
         self._is_dirty = False
         self._size = None
+        self._cached = False
         self.file = StringIO()
+
+    def _caches(func):
+        @wraps(func)
+        def inner(self, *args, **kwargs):
+            if not self._cached:
+                self._read_in()
+            func(*args, **kwargs)
+        return inner
 
     @property
     def name(self):
         return self._name
 
     @property
+    @_caches
     def size(self):
-        if self._size is None:
-            self._read_in()
         return self._size
 
     def _read_in(self):
         data = self._storage._read(self._name)
         self.file = StringIO(data)
         self._size = len(data)
+        self._cached = True
 
+    @_caches
     def read(self, num_bytes=None):
-        if not self._is_dirty:
-            self._read_in()
         return self.file.getvalue()
     
     def write(self, content):
@@ -93,6 +107,7 @@ class MogileFileWrapper(File):
             raise AttributeError("File was not opened with write access.")
         self.file = StringIO(content)
         self._is_dirty = True
+        self._cached = True
         
     def close(self):
         if self._is_dirty:
