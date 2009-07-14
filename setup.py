@@ -11,6 +11,7 @@ setup(name='mogilefs_storage',
       author='Daniel E. Bruce',
       author_email='ircubic@gmail.com',
       zip_safe=True,
+      install_requires = ['django>=1.0'],
 # Commented out, pending fix for https://bugs.launchpad.net/zc.buildout/+bug/285121
 #      install_requires = ['mogilefs'],
 #      dependency_links = [
