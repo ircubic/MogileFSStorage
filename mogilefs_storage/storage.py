@@ -73,22 +73,40 @@ class MogileFileWrapper(File):
         self._is_dirty = False
         self._size = None
         self._cached = False
+        self._closed = False
         self.file = StringIO()
 
-    def _caches(func):
+    def _cached(func):
         @wraps(func)
+        @_needsopen
         def inner(self, *args, **kwargs):
             if not self._cached:
                 self._read_in()
             func(*args, **kwargs)
         return inner
 
+    def _needsopen(func):
+        @wraps(func)
+        def inner(self,*args,**kwargs):
+            if self._closed:
+                raise ValueError('I/O operation on closed file')
+            func(**args, **kwargs)
+        return inner
+
+    @property
+    def mode(self):
+        return self._mode
+        
     @property
     def name(self):
         return self._name
 
     @property
-    @_caches
+    def closed(self):
+        return self._closed
+
+    @property
+    @_cached
     def size(self):
         return self._size
 
@@ -97,22 +115,45 @@ class MogileFileWrapper(File):
         self.file = StringIO(data)
         self._size = len(data)
         self._cached = True
-
-    @_caches
-    def read(self, num_bytes=None):
-        return self.file.getvalue()
     
+    def isatty(self):
+        return False
+        
+    @_cached
+    def seek(self, *args, *kwargs):
+        return self.file.seek(*args, *kwargs)
+        
+    @_cached
+    def tell(self, *args, *kwargs):
+        return self.file.tell(*args, *kwargs)
+        
+    @_cached
+    def read(self, num_bytes=None):
+        return self.file.read(num_bytes)
+    
+    def readlines(self, num_bytes=None):
+        return self.read(num_bytes).split('\n')
+    
+    @_needsopen
+    def flush(self):
+        if self._is_dirty:
+            self._storage._save(self._name, self.file)
+        self.file = StringIO()
+        self._cached = False
+        self._is_dirty = False
+
+    @_needsopen
     def write(self, content):
         if 'w' not in self._mode:
             raise AttributeError("File was not opened with write access.")
-        self.file = StringIO(content)
+        self.file = StringIO(self.file.getvalue() + content)
         self._is_dirty = True
         self._cached = True
         
     def close(self):
-        if self._is_dirty:
-            self._storage._save(self._name, self.file)
+        self.flush()
         self.file.close()
+        self._closed = True
 
 def get_random_string(amount=8):
     import string
