@@ -171,17 +171,30 @@ def test(trackers, domain):
 
     def get_test_name():
         return 'MFSS' + get_random_string(8)
+    TESTDATA_SIZE = 1024*10
 
+    # Test if writes work
     test_name = get_test_name()
-    test_data = get_random_string(1024*10)
+    test_data = get_random_string(TESTDATA_SIZE)
     
     f = storage.open(test_name, 'w')
     f.write(test_data)
     f.close()
     assert test_data == c[test_name]
 
+    # Test if concurrent writes work
     test_name = get_test_name()
-    test_data = get_random_string(1024*10)
+    test_data = get_random_string(TESTDATA_SIZE)
+    
+    f = storage.open(test_name, 'w')
+    f.write(test_data[:TESTDATA_SIZE/2])
+    f.write(test_data[TESTDATA_SIZE/2:])
+    f.close()
+    assert test_data == c[test_name]
+
+    # Test if reads work
+    test_name = get_test_name()
+    test_data = get_random_string(TESTDATA_SIZE)
 
     c[test_name] = test_data
     f = storage.open(test_name)
@@ -189,8 +202,22 @@ def test(trackers, domain):
     f.close()
     assert test_data == read_text
 
+    # Test seek and partial read
+    test_name = get_test_name()
+    test_data = get_random_string(TESTDATA_SIZE)
+
+    c[test_name] = test_data
+    check_start = TESTDATA_SIZE/2
+    check_len = TESTDATA_SIZE/10
+    check_data = test_data[check_start:check_start+check_len]
+    f = storage.open(test_name)
+    f.seek(check_start)
+    assert f.tell() == check_start
+    read_text = f.read(check_len)
+    f.close()
+    assert check_data == read_text
+
     print "Great success!"
-    
 
 if __name__ == '__main__':
     import sys
