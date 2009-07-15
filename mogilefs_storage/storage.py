@@ -65,6 +65,24 @@ class MogileFSStorage(Storage):
     def delete(self, filename): 
         self.client.delete(filename)
 
+
+def _needsopen(func):
+    @wraps(func)
+    def inner(self,*args,**kwargs):
+        if self._closed:
+            raise ValueError('I/O operation on closed file')
+        func(*args, **kwargs)
+    return inner
+
+def _cached(func):
+    @_needsopen
+    @wraps(func)
+    def inner(self, *args, **kwargs):
+        if not self._cached:
+            self._read_in()
+        func(*args, **kwargs)
+    return inner
+
 class MogileFileWrapper(File):
     def __init__(self, name, storage, mode):
         self._name = name
@@ -75,23 +93,6 @@ class MogileFileWrapper(File):
         self._cached = False
         self._closed = False
         self.file = StringIO()
-
-    def _cached(func):
-        @wraps(func)
-        @_needsopen
-        def inner(self, *args, **kwargs):
-            if not self._cached:
-                self._read_in()
-            func(*args, **kwargs)
-        return inner
-
-    def _needsopen(func):
-        @wraps(func)
-        def inner(self,*args,**kwargs):
-            if self._closed:
-                raise ValueError('I/O operation on closed file')
-            func(**args, **kwargs)
-        return inner
 
     @property
     def mode(self):
@@ -120,12 +121,12 @@ class MogileFileWrapper(File):
         return False
         
     @_cached
-    def seek(self, *args, *kwargs):
-        return self.file.seek(*args, *kwargs)
+    def seek(self, *args, **kwargs):
+        return self.file.seek(*args, **kwargs)
         
     @_cached
-    def tell(self, *args, *kwargs):
-        return self.file.tell(*args, *kwargs)
+    def tell(self, *args, **kwargs):
+        return self.file.tell(*args, **kwargs)
         
     @_cached
     def read(self, num_bytes=None):
