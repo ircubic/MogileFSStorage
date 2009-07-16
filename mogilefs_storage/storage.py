@@ -68,10 +68,10 @@ class MogileFSStorage(Storage):
 
 def _needsopen(func):
     @wraps(func)
-    def inner(self,*args,**kwargs):
+    def inner(self, *args, **kwargs):
         if self._closed:
             raise ValueError('I/O operation on closed file')
-        func(*args, **kwargs)
+        return func(self, *args, **kwargs)
     return inner
 
 def _cached(func):
@@ -80,7 +80,7 @@ def _cached(func):
     def inner(self, *args, **kwargs):
         if not self._cached:
             self._read_in()
-        func(*args, **kwargs)
+        return func(self, *args, **kwargs)
     return inner
 
 class MogileFileWrapper(File):
@@ -129,10 +129,10 @@ class MogileFileWrapper(File):
         return self.file.tell(*args, **kwargs)
         
     @_cached
-    def read(self, num_bytes=None):
+    def read(self, num_bytes=-1):
         return self.file.read(num_bytes)
     
-    def readlines(self, num_bytes=None):
+    def readlines(self, num_bytes=-1):
         return self.read(num_bytes).split('\n')
     
     @_needsopen
